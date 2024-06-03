@@ -148,7 +148,7 @@ namespace Securify.ShellLink.Structures
             }
         }
 
-        public override uint MinimumBlockSize => throw new NotImplementedException();
+        public override uint MinimumBlockSize => 0x4;
         #endregion // DisplayName
 
         #region GetOffsetByIndex
