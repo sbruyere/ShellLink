@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Text;
 
 namespace Securify.ShellLink.Structures
@@ -21,6 +22,13 @@ namespace Securify.ShellLink.Structures
             DroidBirth = new Guid[2];
         }
         #endregion // Constructor
+
+        /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// TrackerDataBlock structure. This value MUST be 0x00000060
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x00000060;
+
 
         /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
@@ -111,22 +119,7 @@ namespace Securify.ShellLink.Structures
         public static TrackerDataBlock FromByteArray(byte[] ba)
         {
             TrackerDataBlock TrackerDataBlock = new TrackerDataBlock();
-            if (ba.Length < 0x60)
-            {
-                throw new ArgumentException(String.Format("Size of the TrackerDataBlock Structure is less than 96 ({0})", ba.Length));
-            }
-
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, TrackerDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != TrackerDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, TrackerDataBlock.BlockSignature));
-            }
+            TrackerDataBlock.Validate(ref ba);
 
             UInt32 Length = BitConverter.ToUInt32(ba, 8);
             if (Length < 0x58)

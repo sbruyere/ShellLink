@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Securify.ShellLink.Exceptions;
 using Securify.ShellLink.Flags;
 
 namespace Securify.ShellLink.Structures
@@ -22,10 +23,16 @@ namespace Securify.ShellLink.Structures
         #endregion //Constructor
 
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// ConsoleDataBlock structure. This value MUST be 0x000000CC
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x000000CC;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
         /// ConsoleDataBlock structure. This value MUST be 0x000000CC
         /// </summary>
-        public override UInt32 BlockSize => 0xCC;
+        public override UInt32 BlockSize => MinimumBlockSize;
 
         /// <summary>
         /// BlockSignature (4 bytes): A 32-bit, unsigned integer that specifies the signature 
@@ -298,22 +305,7 @@ namespace Securify.ShellLink.Structures
         {
             ConsoleDataBlock ConsoleDataBlock = new ConsoleDataBlock();
 
-            if (ba.Length < 0xCC)
-            {
-                throw new ArgumentException(String.Format("Size of the ConsoleDataBlock Structure is less than 204 ({0})", ba.Length));
-            }
-
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, ConsoleDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != ConsoleDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, ConsoleDataBlock.BlockSignature));
-            }
+            ConsoleDataBlock.Validate(ref ba);
 
             ConsoleDataBlock.FillAttributes = (FillAttributes)BitConverter.ToUInt16(ba, 8);
             ConsoleDataBlock.PopupFillAttributes = (FillAttributes)BitConverter.ToUInt16(ba, 10);

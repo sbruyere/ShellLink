@@ -2,6 +2,7 @@
 using System.Text;
 using Securify.ShellLink.Internal;
 using System.Runtime.InteropServices;
+using Securify.ShellLink.Exceptions;
 
 namespace Securify.ShellLink.Structures
 {
@@ -36,11 +37,13 @@ namespace Securify.ShellLink.Structures
         }
         #endregion // GetBytes
 
+        public override uint MinimumBlockSize => 2;
+
         /// <summary>
         /// ItemIDSize (2 bytes): A 16-bit, unsigned integer that specifies the size, in bytes, of the 
         /// ItemID structure, including the ItemIDSize field.
         /// </summary>
-        public UInt16 ItemIDSize => (UInt16)(Data.Length + 2);
+        public UInt16 ItemIDSize => (UInt16)(Data.Length + MinimumBlockSize);
 
         /// <summary>
         /// Data (variable): The shell data source-defined data that specifies an item.
@@ -102,19 +105,10 @@ namespace Securify.ShellLink.Structures
         {
             ItemID ItemId = new ItemID();
 
-            if (ba.Length < 2)
-            {
-                throw new ArgumentException(String.Format("Size of the ItemID is less than 2 ({0})", ba.Length));
-            }
-
-            UInt16 ItemIDSize = BitConverter.ToUInt16(ba, 0);
-            if (ba.Length < ItemIDSize)
-            {
-                throw new ArgumentException(String.Format("Size of the ItemID is not equal to {0} ({1})", ItemIDSize, ba.Length));
-            }
-
-            ItemId.Data = new byte[ItemIDSize - 2];
-            Buffer.BlockCopy(ba, 2, ItemId.Data, 0, ItemId.Data.Length);
+            UInt16 ItemIDSize = (ushort)ItemId.Validate(ref ba, headerSize16b: true);
+            
+            ItemId.Data = new byte[ItemIDSize - ItemId.MinimumBlockSize];
+            Buffer.BlockCopy(ba, (int)ItemId.MinimumBlockSize, ItemId.Data, 0, ItemId.Data.Length);
 
             return ItemId;
         }

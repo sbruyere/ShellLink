@@ -2,6 +2,7 @@
 using System.Text;
 using System.Linq;
 using Securify.ShellLink.Flags;
+using Securify.ShellLink.Exceptions;
 
 namespace Securify.ShellLink.Structures
 {
@@ -19,9 +20,14 @@ namespace Securify.ShellLink.Structures
         #endregion // Constructor
 
         /// <summary>
+        /// headerBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the ExtraDataBlock structure.
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x14;
+
+        /// <summary>
         /// When set to true, wide chars will be used
         /// </summary>
-        public Boolean IsUnicode => NetNameOffset > 0x14;
+        public Boolean IsUnicode => NetNameOffset > MinimumBlockSize;
 
         #region CommonNetworkRelativeLinkSize
         /// <summary>
@@ -239,16 +245,8 @@ namespace Securify.ShellLink.Structures
         public static CommonNetworkRelativeLink FromByteArray(byte[] ba)
         {
             CommonNetworkRelativeLink CommonNetworkRelativeLink = new CommonNetworkRelativeLink();
-            if (ba.Length < 0x14)
-            {
-                throw new ArgumentException(String.Format("Size of the CommonNetworkRelativeLink Structure is less than 20 ({0})", ba.Length));
-            }
 
-            UInt32 CommonNetworkRelativeLinkSize = BitConverter.ToUInt32(ba, 0);
-            if (CommonNetworkRelativeLinkSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("The CommonNetworkRelativeLinkSize is {0} is incorrect (expected {1})", CommonNetworkRelativeLink, ba.Length));
-            }
+            CommonNetworkRelativeLink.Validate(ref ba);
 
             CommonNetworkRelativeLinkFlags CommonNetworkRelativeLinkFlags = (CommonNetworkRelativeLinkFlags)BitConverter.ToUInt32(ba, 4);
             UInt32 NetNameOffset = BitConverter.ToUInt32(ba, 8);

@@ -3,6 +3,8 @@ using System.Text;
 using Securify.PropertyStore;
 using Securify.PropertyStore.Structures;
 using System.Collections.Generic;
+using Securify.ShellLink.Exceptions;
+using System.Collections;
 
 namespace Securify.ShellLink.Structures
 {
@@ -33,6 +35,12 @@ namespace Securify.ShellLink.Structures
 
         #region BlockSize
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// PropertyStoreDataBlock structure. This value MUST be 0x0000000C
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x0000000C;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
         /// PropertyStoreDataBlock structure. This value MUST be greater than or equal to 0x0000000C.
         /// </summary>
@@ -40,7 +48,7 @@ namespace Securify.ShellLink.Structures
         {
             get
             {
-                UInt32 Size = 12;
+                UInt32 Size = MinimumBlockSize;
                 for(int i = 0; i < PropertyStore.Count; i++)
                 {
                     Size += PropertyStore[i].StorageSize;
@@ -102,26 +110,11 @@ namespace Securify.ShellLink.Structures
         public static PropertyStoreDataBlock FromByteArray(byte[] ba)
         {
             PropertyStoreDataBlock PropertyStoreDataBlock = new PropertyStoreDataBlock();
-            if (ba.Length < 0xC)
-            {
-                throw new ArgumentException(String.Format("Size of the PropertyStoreDataBlock Structure is less than 12 ({0})", ba.Length));
-            }
+            int blockSize = PropertyStoreDataBlock.Validate(ref ba);
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, PropertyStoreDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != PropertyStoreDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, PropertyStoreDataBlock.BlockSignature));
-            }
-
-            byte[] data = new byte[BlockSize - 4];
-            Buffer.BlockCopy(BitConverter.GetBytes(BlockSize - 4), 0, data, 0, 4);
-            Buffer.BlockCopy(ba, 8, data, 4, (int)BlockSize - 8);
+            byte[] data = new byte[blockSize - 4];
+            Buffer.BlockCopy(BitConverter.GetBytes(blockSize - 4), 0, data, 0, 4);
+            Buffer.BlockCopy(ba, 8, data, 4, (int)blockSize - 8);
             SerializedPropertyStore SerializedPropertyStore = SerializedPropertyStore.FromByteArray(data);
             PropertyStoreDataBlock.PropertyStore = SerializedPropertyStore.PropertyStorage;
 

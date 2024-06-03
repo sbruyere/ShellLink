@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net8.0;net6.0;netstandard2.0</TargetFrameworks>
     <Authors>Yorick Koster</Authors>
     <Company>Securify B.V.</Company>
     <Product>ShellLink Class Library</Product>
@@ -13,14 +13,15 @@
     <PackageProjectUrl>https://github.com/securifybv/ShellLink</PackageProjectUrl>
     <RepositoryUrl>https://github.com/securifybv/ShellLink.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageId>Securify.ShellLink</PackageId>
+    <PackageId>AF.Securify.ShellLink</PackageId>
     <AssemblyName>Securify.ShellLink</AssemblyName>
     <RootNamespace>Securify.ShellLink</RootNamespace>
     <Version>1.1.0</Version>
+    <Title>Securify.ShellLink (fork by Yneos)</Title>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Securify.PropertyStore" Version="1.1.0" />
+    <PackageReference Include="YF.Securify.PropertyStore" Version="1.1.0" />
   </ItemGroup>
 
 </Project>

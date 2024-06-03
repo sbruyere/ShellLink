@@ -186,15 +186,7 @@ namespace Securify.ShellLink.Structures
         {
             ShellLinkHeader Header = new ShellLinkHeader();
 
-            if (ba.Length < Header.HeaderSize)
-            {
-                throw new ArgumentException(String.Format("Size of the LNK Header is less than {0} ({1})", Header.HeaderSize, ba.Length));
-            }
-
-            if (BitConverter.ToUInt32(ba, 0) != Header.HeaderSize)
-            {
-                throw new ArgumentException(String.Format("The LNK Header Size is {0} is incorrect (expected {1})", BitConverter.ToUInt32(ba, 0), Header.HeaderSize));
-            }
+            Header.Validate(ref ba);
 
             byte[] linkCLSID = new byte[16];
             Buffer.BlockCopy(ba, 4, linkCLSID, 0, linkCLSID.Length);

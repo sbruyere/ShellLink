@@ -2,6 +2,7 @@
 using System.Text;
 using System.Linq;
 using Securify.ShellLink.Flags;
+using Securify.ShellLink.Exceptions;
 
 namespace Securify.ShellLink.Structures
 {
@@ -85,6 +86,8 @@ namespace Securify.ShellLink.Structures
             }
         }
         #endregion // LinkInfoHeaderSize
+
+        public override uint MinimumBlockSize => 0x1C;
 
         /// <summary>
         /// LinkInfoFlags (4 bytes): Flags that specify whether the VolumeID, LocalBasePath, LocalBasePathUnicode, 
@@ -345,19 +348,10 @@ namespace Securify.ShellLink.Structures
         public static LinkInfo FromByteArray(byte[] ba)
         {
             LinkInfo LinkInfo = new LinkInfo();
-            if (ba.Length < 0x1C)
-            {
-                throw new ArgumentException(String.Format("Size of the LinkInfo Structure is less than 28 ({0})", ba.Length));
-            }
-
-            UInt32 LinkInfoSize = BitConverter.ToUInt32(ba, 0);
-            if (LinkInfoSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("The LinkInfoSize is {0} is incorrect (expected {1})", LinkInfoSize, ba.Length));
-            }
+            LinkInfo.Validate(ref ba);
 
             UInt32 LinkInfoHeaderSize = BitConverter.ToUInt32(ba, 4);
-            if (LinkInfoHeaderSize < 0x1C)
+            if (LinkInfoHeaderSize < LinkInfo.MinimumBlockSize)
             {
                 throw new ArgumentException(String.Format("The LinkInfoHeaderSize is {0} is incorrect)", LinkInfoHeaderSize));
             }
@@ -372,7 +366,7 @@ namespace Securify.ShellLink.Structures
             UInt32 LocalBasePathOffsetUnicode = 0;
             UInt32 CommonPathSuffixOffsetUnicode = 0;
 
-            if (LinkInfoHeaderSize > 0x1C)
+            if (LinkInfoHeaderSize > LinkInfo.MinimumBlockSize)
             {
                 if ((LinkInfoFlags & LinkInfoFlags.VolumeIDAndLocalBasePath) != 0)
                 {

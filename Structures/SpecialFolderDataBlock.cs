@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Securify.ShellLink.Exceptions;
 using Securify.ShellLink.Flags;
 
 namespace Securify.ShellLink.Structures
@@ -30,10 +31,16 @@ namespace Securify.ShellLink.Structures
         #endregion // Constructor
 
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// SpecialFolderDataBlock structure. This value MUST be 0x00000010
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x00000010;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
         /// SpecialFolderDataBlock structure. This value MUST be 0x00000010.
         /// </summary>
-        public override UInt32 BlockSize => 0x10;
+        public override UInt32 BlockSize => MinimumBlockSize;
 
         /// <summary>
         /// BlockSignature (4 bytes): A 32-bit, unsigned integer that specifies the signature 
@@ -90,22 +97,7 @@ namespace Securify.ShellLink.Structures
         public static SpecialFolderDataBlock FromByteArray(byte[] ba)
         {
             SpecialFolderDataBlock SpecialFolderDataBlock = new SpecialFolderDataBlock();
-            if (ba.Length < 0x10)
-            {
-                throw new ArgumentException(String.Format("Size of the SpecialFolderDataBlock Structure is less than 16 ({0})", ba.Length));
-            }
-
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, SpecialFolderDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != SpecialFolderDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, SpecialFolderDataBlock.BlockSignature));
-            }
+            SpecialFolderDataBlock.Validate(ref ba);
 
             SpecialFolderDataBlock.SpecialFolderID = (CSIDL)BitConverter.ToUInt32(ba, 8);
             SpecialFolderDataBlock.Offset = BitConverter.ToUInt32(ba, 12);

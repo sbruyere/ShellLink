@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Text;
 
 namespace Securify.ShellLink.Structures
@@ -28,10 +29,16 @@ namespace Securify.ShellLink.Structures
         #endregion // Constructor
 
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// EnvironmentVariableDataBlock structure. This value MUST be 0x00000314
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x00000314;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
         /// EnvironmentVariableDataBlock structure. This value MUST be 0x00000314.
         /// </summary>
-        public override UInt32 BlockSize => 0x314;
+        public override UInt32 BlockSize => MinimumBlockSize;
 
         /// <summary>
         /// BlockSignature (4 bytes): A 32-bit, unsigned integer that specifies the signature 
@@ -87,22 +94,8 @@ namespace Securify.ShellLink.Structures
         public static EnvironmentVariableDataBlock FromByteArray(byte[] ba)
         {
             EnvironmentVariableDataBlock EnvironmentVariableDataBlock = new EnvironmentVariableDataBlock();
-            if (ba.Length < 0x314)
-            {
-                throw new ArgumentException(String.Format("Size of the EnvironmentVariableDataBlock Structure is less than 788 ({0})", ba.Length));
-            }
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, EnvironmentVariableDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != EnvironmentVariableDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, EnvironmentVariableDataBlock.BlockSignature));
-            }
+            EnvironmentVariableDataBlock.Validate(ref ba);
 
             byte[] TargetAnsi = new byte[260];
             Buffer.BlockCopy(ba, 8, TargetAnsi, 0, 260);

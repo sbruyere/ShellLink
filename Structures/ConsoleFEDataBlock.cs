@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Text;
 
 namespace Securify.ShellLink.Structures
@@ -26,10 +27,16 @@ namespace Securify.ShellLink.Structures
         #endregion // Constructor
 
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// ConsoleFEDataBlock structure. This value MUST be 0x0000000C
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x0000000C;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
         /// ConsoleFEDataBlock structure. This value MUST be 0x0000000C.
         /// </summary>
-        public override UInt32 BlockSize => 0xC;
+        public override UInt32 BlockSize => MinimumBlockSize;
 
         /// <summary>
         /// BlockSignature (4 bytes): A 32-bit, unsigned integer that specifies the signature 
@@ -76,22 +83,8 @@ namespace Securify.ShellLink.Structures
         public static ConsoleFEDataBlock FromByteArray(byte[] ba)
         {
             ConsoleFEDataBlock ConsoleFEDataBlock = new ConsoleFEDataBlock();
-            if (ba.Length < 0xC)
-            {
-                throw new ArgumentException(String.Format("Size of the ConsoleFEDataBlock Structure is less than 12 ({0})", ba.Length));
-            }
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, ConsoleFEDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != ConsoleFEDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, ConsoleFEDataBlock.BlockSignature));
-            }
+            ConsoleFEDataBlock.Validate(ref ba);
 
             ConsoleFEDataBlock.CodePage = BitConverter.ToUInt32(ba, 8);
 

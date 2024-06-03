@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Securify.ShellLink.Const;
+using Securify.ShellLink.Exceptions;
 
 namespace Securify.ShellLink.Structures
 {
@@ -31,10 +32,16 @@ namespace Securify.ShellLink.Structures
         #endregion // Constructor
 
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// KnownFolderDataBlock structure. This value MUST be 0x0000001C
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x0000001C;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the KnownFolderDataBlock 
         /// structure. This value MUST be 0x0000001C.
         /// </summary>
-        public override UInt32 BlockSize => 0x1C;
+        public override UInt32 BlockSize => MinimumBlockSize;
 
         /// <summary>
         /// BlockSignature (4 bytes): A 32-bit, unsigned integer that specifies the signature of the 
@@ -92,22 +99,8 @@ namespace Securify.ShellLink.Structures
         public static KnownFolderDataBlock FromByteArray(byte[] ba)
         {
             KnownFolderDataBlock KnownFolderDataBlock = new KnownFolderDataBlock();
-            if (ba.Length < 0x1C)
-            {
-                throw new ArgumentException(String.Format("Size of the KnownFolderDataBlock Structure is less than 28 ({0})", ba.Length));
-            }
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, KnownFolderDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != KnownFolderDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, KnownFolderDataBlock.BlockSignature));
-            }
+            KnownFolderDataBlock.Validate(ref ba);
 
             byte[] KnownFolderID = new byte[16];
             Buffer.BlockCopy(ba, 8, KnownFolderID, 0, KnownFolderID.Length);

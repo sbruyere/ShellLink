@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Text;
 
 namespace Securify.ShellLink.Structures
@@ -29,10 +30,16 @@ namespace Securify.ShellLink.Structures
         #endregion // Constructor
 
         /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// ShimDataBlock structure. This value MUST be 0x00000088
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x00000088;
+
+        /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
         /// ShimDataBlock structure. This value MUST be greater than or equal to 0x00000088.
         /// </summary>
-        public override UInt32 BlockSize => (UInt32)(LayerName.Length < 0x40 ? 0x88 : (LayerName.Length + 1) * 2 + 8);
+        public override UInt32 BlockSize => LayerName.Length < 0x40 ? MinimumBlockSize : (uint)(LayerName.Length + 1) * 2 + 8;
 
         /// <summary>
         /// BlockSignature (4 bytes): A 32-bit, unsigned integer that specifies the signature 
@@ -79,25 +86,10 @@ namespace Securify.ShellLink.Structures
         public static ShimDataBlock FromByteArray(byte[] ba)
         {
             ShimDataBlock ShimDataBlock = new ShimDataBlock();
-            if (ba.Length < 0x88)
-            {
-                throw new ArgumentException(String.Format("Size of the ShimDataBlock Structure is less than 136 ({0})", ba.Length));
-            }
+            int hBlockSize = ShimDataBlock.Validate(ref ba);
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, ShimDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != ShimDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, ShimDataBlock.BlockSignature));
-            }
-
-            byte[] LayerName = new byte[BlockSize - 8];
-            Buffer.BlockCopy(ba, 8, LayerName, 0, (int)BlockSize - 8);
+            byte[] LayerName = new byte[hBlockSize - 8];
+            Buffer.BlockCopy(ba, 8, LayerName, 0, hBlockSize - 8);
             ShimDataBlock.LayerName = Encoding.Unicode.GetString(LayerName).TrimEnd(new char[] { (char)0 });
 
             return ShimDataBlock;

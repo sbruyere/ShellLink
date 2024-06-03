@@ -2,6 +2,7 @@
 using System.Text;
 using System.Linq;
 using Securify.ShellLink.Flags;
+using Securify.ShellLink.Exceptions;
 
 namespace Securify.ShellLink.Structures
 {
@@ -140,16 +141,7 @@ namespace Securify.ShellLink.Structures
         public static VolumeID FromByteArray(byte[] ba)
         {
             VolumeID VolumeId = new VolumeID(false);
-            if (ba.Length <= 0x10)
-            {
-                throw new ArgumentException(String.Format("Size of the VolumeID Structure is less than 17 ({0})", ba.Length));
-            }
-
-            UInt32 VolumeIDSize = BitConverter.ToUInt32(ba, 0);
-            if (VolumeIDSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("The VolumeIDSize is {0} is incorrect (expected {1})", VolumeIDSize, ba.Length));
-            }
+            uint VolumeIDSize = VolumeId.Validate(ref ba);
 
             VolumeId.DriveType = (DriveType)BitConverter.ToUInt32(ba, 4);
             VolumeId.DriveSerialNumber = BitConverter.ToUInt32(ba, 8);

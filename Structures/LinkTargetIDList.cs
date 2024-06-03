@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,16 +45,7 @@ namespace Securify.ShellLink.Structures
         {
             LinkTargetIDList IdList = new LinkTargetIDList();
 
-            if (ba.Length < 4)
-            {
-                throw new ArgumentException(String.Format("Size of the LinkTargetIDList is less than 4 ({0})", ba.Length));
-            }
-
-            UInt16 IDListSize = BitConverter.ToUInt16(ba, 0);
-            if (ba.Length < IDListSize)
-            {
-                throw new ArgumentException(String.Format("Size of the LinkTargetIDList is less than {0} ({1})", IDListSize, ba.Length));
-            }
+            uint IDListSize = IdList.Validate(ref ba, headerSize16b: true);
 
             IDListSize -= 2;
             ba = ba.Skip(2).ToArray();

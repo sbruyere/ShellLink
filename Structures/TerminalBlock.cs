@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Securify.ShellLink.Exceptions;
 using Securify.ShellLink.Internal;
 
 namespace Securify.ShellLink.Structures
@@ -10,6 +11,7 @@ namespace Securify.ShellLink.Structures
     /// </summary>
     public class TerminalBlock : Structure
     {
+        public override uint MinimumBlockSize => 4;
         #region Constructor
         /// <summary>
         /// Constructor
@@ -43,10 +45,9 @@ namespace Securify.ShellLink.Structures
         public static TerminalBlock FromByteArray(byte[] ba)
         {
             TerminalBlock terminalBlock = new TerminalBlock();
-            if (ba.Length < 4)
-            {
-                throw new ArgumentException(String.Format("Size of the TerminalBlock Structure is less than 4 ({0})", ba.Length));
-            }
+
+            terminalBlock.ValidateInputDataSize(ba.Length);
+
             return terminalBlock;
         }
         #endregion // FromByteArray

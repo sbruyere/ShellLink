@@ -258,7 +258,8 @@ namespace Securify.ShellLink.Structures
             ExtraData ExtraData = new ExtraData();
             if (ba.Length < 4)
             {
-                throw new ArgumentException(String.Format("Size of the ExtraData Structure is less than 4 ({0})", ba.Length));
+                ExtraData.Errors.Add(new ArgumentException(String.Format("Size of the ExtraData Structure is less than 4 ({0})", ba.Length)));
+                return ExtraData;
             }
 
             UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
@@ -267,47 +268,61 @@ namespace Securify.ShellLink.Structures
             {
                 if (BlockSize > ba.Length)
                 {
-                    throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (bytes left {1})", BlockSize, ba.Length));
+                    ExtraData.Errors.Add(new ArgumentException(String.Format("BlockSize is {0} is incorrect (bytes left {1})", BlockSize, ba.Length)));
+                    return ExtraData;
                 }
+
                 BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-                switch (BlockSignature)
+
+                try
                 {
-                    case BlockSignature.CONSOLE_PROPS:
-                        ExtraData.ConsoleDataBlock = ConsoleDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.CONSOLE_FE_PROPS:
-                        ExtraData.ConsoleFEDataBlock = ConsoleFEDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.DARWIN_PROPS:
-                        ExtraData.DarwinDataBlock = DarwinDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.ENVIRONMENT_PROPS:
-                        ExtraData.EnvironmentVariableDataBlock = EnvironmentVariableDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.ICON_ENVIRONMENT_PROPS:
-                        ExtraData.IconEnvironmentDataBlock = IconEnvironmentDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.KNOWN_FOLDER_PROPS:
-                        ExtraData.KnownFolderDataBlock = KnownFolderDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.PROPERTY_STORE_PROPS:
-                        ExtraData.PropertyStoreDataBlock = PropertyStoreDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.SHIM_PROPS:
-                        ExtraData.ShimDataBlock = ShimDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.SPECIAL_FOLDER_PROPS:
-                        ExtraData.SpecialFolderDataBlock = SpecialFolderDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.TRACKER_PROPS:
-                        ExtraData.TrackerDataBlock = TrackerDataBlock.FromByteArray(ba);
-                        break;
-                    case BlockSignature.VISTA_AND_ABOVE_IDLIST_PROPS:
-                        ExtraData.VistaAndAboveIDListDataBlock = VistaAndAboveIDListDataBlock.FromByteArray(ba);
-                        break;
-                    default:
-                        throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect", BlockSignature));
+                    switch (BlockSignature)
+                    {
+                        case BlockSignature.CONSOLE_PROPS:
+                            ExtraData.ConsoleDataBlock = ConsoleDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.CONSOLE_FE_PROPS:
+                            ExtraData.ConsoleFEDataBlock = ConsoleFEDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.DARWIN_PROPS:
+                            ExtraData.DarwinDataBlock = DarwinDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.ENVIRONMENT_PROPS:
+                            ExtraData.EnvironmentVariableDataBlock = EnvironmentVariableDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.ICON_ENVIRONMENT_PROPS:
+                            ExtraData.IconEnvironmentDataBlock = IconEnvironmentDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.KNOWN_FOLDER_PROPS:
+                            ExtraData.KnownFolderDataBlock = KnownFolderDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.PROPERTY_STORE_PROPS:
+                            ExtraData.PropertyStoreDataBlock = PropertyStoreDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.SHIM_PROPS:
+                            ExtraData.ShimDataBlock = ShimDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.SPECIAL_FOLDER_PROPS:
+                            ExtraData.SpecialFolderDataBlock = SpecialFolderDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.TRACKER_PROPS:
+                            ExtraData.TrackerDataBlock = TrackerDataBlock.FromByteArray(ba);
+                            break;
+                        case BlockSignature.VISTA_AND_ABOVE_IDLIST_PROPS:
+                            ExtraData.VistaAndAboveIDListDataBlock = VistaAndAboveIDListDataBlock.FromByteArray(ba);
+                            break;
+                        default:
+
+                            ExtraData.Errors.Add(new ArgumentException(String.Format("BlockSignature is {0} is incorrect", BlockSignature)));
+                            return ExtraData;
+                    }
+                } 
+                catch (Exception ex)
+                {
+                    ExtraData.Errors.Add(ex);
                 }
+
+
                 ba = ba.Skip((int)BlockSize).ToArray();
                 BlockSize = BitConverter.ToUInt32(ba, 0);
             }

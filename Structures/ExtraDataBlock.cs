@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Text;
 
 namespace Securify.ShellLink.Structures
@@ -21,7 +22,7 @@ namespace Securify.ShellLink.Structures
     public abstract class ExtraDataBlock : Structure
     {
         /// <summary>
-        /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the ExtraDataBlock structure.
+        /// headerBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the ExtraDataBlock structure.
         /// </summary>
         public abstract UInt32 BlockSize { get; }
 
@@ -30,13 +31,30 @@ namespace Securify.ShellLink.Structures
         /// </summary>
         public abstract BlockSignature BlockSignature { get; }
 
+
+
+        public void ValidateHeaderBlockSignature(ref byte[] input)
+        {
+            BlockSignature headerBlockSignature = (BlockSignature)BitConverter.ToUInt32(input, 4);
+
+            if (headerBlockSignature != BlockSignature)
+                throw new UnexpectedStructureBlockSignatureException(this, headerBlockSignature, BlockSignature);
+        }
+
+        public override uint Validate(ref byte[] input, bool headerSize16b = false)
+        {
+            uint headerBlockSize = base.Validate(ref input, headerSize16b);
+            ValidateHeaderBlockSignature(ref input);
+            return headerBlockSize;
+        }
+
         #region ToString
         /// <inheritdoc />
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(base.ToString());
-            builder.AppendFormat("BlockSize: {0} (0x{0:X})", BlockSize);
+            builder.AppendFormat("headerBlockSize: {0} (0x{0:X})", BlockSize);
             builder.AppendLine();
             builder.AppendFormat("BlockSignature: 0x{0:X}", BlockSignature);
             builder.AppendLine();

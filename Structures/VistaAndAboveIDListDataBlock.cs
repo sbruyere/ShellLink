@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Securify.ShellLink.Exceptions;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -29,6 +30,12 @@ namespace Securify.ShellLink.Structures
             this.IDList = IDList;
         }
         #endregion // Constructor
+
+        /// <summary>
+        /// MinimumBlockSize (4 bytes): A 32-bit, unsigned integer that specifies the minimum size of the 
+        /// VistaAndAboveIDListDataBlock structure. This value MUST be 0x0000000A
+        /// </summary>
+        public override UInt32 MinimumBlockSize => 0x0000000A;
 
         /// <summary>
         /// BlockSize (4 bytes): A 32-bit, unsigned integer that specifies the size of the 
@@ -80,25 +87,11 @@ namespace Securify.ShellLink.Structures
         public static VistaAndAboveIDListDataBlock FromByteArray(byte[] ba)
         {
             VistaAndAboveIDListDataBlock VistaAndAboveIDListDataBlock = new VistaAndAboveIDListDataBlock();
-            if (ba.Length < 0xA)
-            {
-                throw new ArgumentException(String.Format("Size of the VistaAndAboveIDListDataBlock Structure is less than 10 ({0})", ba.Length));
-            }
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
-            if (BlockSize > ba.Length)
-            {
-                throw new ArgumentException(String.Format("BlockSize is {0} is incorrect (expected {1})", BlockSize, VistaAndAboveIDListDataBlock.BlockSize));
-            }
-
-            BlockSignature BlockSignature = (BlockSignature)BitConverter.ToUInt32(ba, 4);
-            if (BlockSignature != VistaAndAboveIDListDataBlock.BlockSignature)
-            {
-                throw new ArgumentException(String.Format("BlockSignature is {0} is incorrect (expected {1})", BlockSignature, VistaAndAboveIDListDataBlock.BlockSignature));
-            }
+            int hBlockSize = VistaAndAboveIDListDataBlock.Validate(ref ba);
 
             ba = ba.Skip(8).ToArray();
-            UInt32 Count = BlockSize - 8;
+            UInt32 Count = (uint)hBlockSize - 8;
             while (Count > 0)
             {
                 UInt16 ItemIDSize = BitConverter.ToUInt16(ba, 0);
