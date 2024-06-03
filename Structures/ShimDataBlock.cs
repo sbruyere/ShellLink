@@ -86,10 +86,10 @@ namespace Securify.ShellLink.Structures
         public static ShimDataBlock FromByteArray(byte[] ba)
         {
             ShimDataBlock ShimDataBlock = new ShimDataBlock();
-            int hBlockSize = ShimDataBlock.Validate(ref ba);
+            uint hBlockSize = ShimDataBlock.Validate(ref ba);
 
             byte[] LayerName = new byte[hBlockSize - 8];
-            Buffer.BlockCopy(ba, 8, LayerName, 0, hBlockSize - 8);
+            Buffer.BlockCopy(ba, 8, LayerName, 0, (int)hBlockSize - 8);
             ShimDataBlock.LayerName = Encoding.Unicode.GetString(LayerName).TrimEnd(new char[] { (char)0 });
 
             return ShimDataBlock;

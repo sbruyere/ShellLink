@@ -112,6 +112,8 @@ namespace Securify.ShellLink.Structures
         /// </summary>
         public HotKeyFlags HotKey { get; set; }
 
+        public override uint MinimumBlockSize => 0x4C;
+
         #region GetBytes
         /// <inheritdoc />
         public override byte[] GetBytes()

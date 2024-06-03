@@ -110,7 +110,7 @@ namespace Securify.ShellLink.Structures
         public static PropertyStoreDataBlock FromByteArray(byte[] ba)
         {
             PropertyStoreDataBlock PropertyStoreDataBlock = new PropertyStoreDataBlock();
-            int blockSize = PropertyStoreDataBlock.Validate(ref ba);
+            uint blockSize = PropertyStoreDataBlock.Validate(ref ba);
 
             byte[] data = new byte[blockSize - 4];
             Buffer.BlockCopy(BitConverter.GetBytes(blockSize - 4), 0, data, 0, 4);

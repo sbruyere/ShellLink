@@ -91,6 +91,8 @@ namespace Securify.ShellLink.Structures
                 return Size;
             }
         }
+
+        public override uint MinimumBlockSize => throw new NotImplementedException();
         #endregion // StringDataSize
 
         #region GetBytes

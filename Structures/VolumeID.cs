@@ -39,7 +39,7 @@ namespace Securify.ShellLink.Structures
         /// This value MUST be greater than 0x00000010. All offsets specified in this structure MUST be less than this 
         /// value, and all strings contained in this structure MUST fit within the extent defined by this size.
         /// </summary>
-        public UInt32 VolumeIDSize => (UInt32)(IsUnicode ? 0x14 + (VolumeLabel.Length + 1) * 2 : 0x10 + VolumeLabel.Length + 1);
+        public UInt32 VolumeIDSize => (UInt32)(IsUnicode ? 0x14 + (VolumeLabel.Length + 1) * 2 : MinimumBlockSize + VolumeLabel.Length + 1);
 
         /// <summary>
         /// DriveType (4 bytes): A 32-bit, unsigned integer that specifies the type of drive the link target is stored on.
@@ -61,7 +61,7 @@ namespace Securify.ShellLink.Structures
         /// If the value of this field is 0x00000014, it MUST be ignored, and the value of the VolumeLabelOffsetUnicode field 
         /// MUST be used to locate the volume label string.
         /// </summary>
-        public UInt32 VolumeLabelOffset => (UInt32)(IsUnicode ? 0x14 : 0x10);
+        public UInt32 VolumeLabelOffset => (UInt32)(IsUnicode ? 0x14 : MinimumBlockSize);
 
         /// <summary>
         /// VolumeLabelOffsetUnicode (4 bytes): An optional, 32-bit, unsigned integer that specifies the location of a string 
@@ -84,6 +84,8 @@ namespace Securify.ShellLink.Structures
         /// default code page or Unicode characters, as specified by preceding fields.
         /// </summary>
         public byte[] Data => (IsUnicode ? Encoding.Unicode.GetBytes(VolumeLabel) : Encoding.Default.GetBytes(VolumeLabel));
+
+        public override uint MinimumBlockSize => 0x10;
 
         #region GetBytes
         /// <inheritdoc />

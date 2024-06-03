@@ -103,6 +103,8 @@ namespace Securify.ShellLink.Structures
         /// </summary>
         public TerminalBlock TerminalBlock { get; set; }
 
+        public override uint MinimumBlockSize => 4;
+
         #region GetBytes
         /// <inheritdoc />
         public override byte[] GetBytes()
@@ -256,13 +258,8 @@ namespace Securify.ShellLink.Structures
         public static ExtraData FromByteArray(byte[] ba)
         {
             ExtraData ExtraData = new ExtraData();
-            if (ba.Length < 4)
-            {
-                ExtraData.Errors.Add(new ArgumentException(String.Format("Size of the ExtraData Structure is less than 4 ({0})", ba.Length)));
-                return ExtraData;
-            }
 
-            UInt32 BlockSize = BitConverter.ToUInt32(ba, 0);
+            UInt32 BlockSize = ExtraData.Validate(ref ba);
 
             while (BlockSize > 4)
             {

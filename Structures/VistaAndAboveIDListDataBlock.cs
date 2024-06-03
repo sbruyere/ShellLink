@@ -88,7 +88,7 @@ namespace Securify.ShellLink.Structures
         {
             VistaAndAboveIDListDataBlock VistaAndAboveIDListDataBlock = new VistaAndAboveIDListDataBlock();
 
-            int hBlockSize = VistaAndAboveIDListDataBlock.Validate(ref ba);
+            uint hBlockSize = VistaAndAboveIDListDataBlock.Validate(ref ba);
 
             ba = ba.Skip(8).ToArray();
             UInt32 Count = (uint)hBlockSize - 8;
